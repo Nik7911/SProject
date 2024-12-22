@@ -1,0 +1,94 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2709
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica-Bold;\f1\fswiss\fcharset0 Helvetica;\f2\fnil\fcharset0 AppleColorEmoji;
+}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww13440\viewh16100\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b\fs30 \cf0 Sistema target scelto a 32 bit
+\f1\b0\fs24 \
+\
+
+\f0\b 1. Indirizzi di memoria pi\'f9 corti (4 byte):
+\f1\b0 \
+\
+In un sistema a 32 bit, gli indirizzi di memoria sono lunghi 32 bit (4 byte). \'c8 pi\'f9 facile lavorare con indirizzi pi\'f9 corti perch\'e9 devi calcolare e iniettare meno dati.\
+A 64 bit, gli indirizzi sono lunghi 64 bit (8 byte), il che complica il calcolo e il posizionamento nel buffer.\
+\
+\
+\
+\
+\
+Disabilitare le Protezioni\
+
+\f2 \uc0\u55357 \u56589 
+\f1  Protezioni che vanno disabilitate:\
+1. Stack Canary (Protezione contro Buffer Overflow):\
+	-Lo stack canary \'e8 un valore casuale inserito nello stack per rilevare sovrascritture accidentali o malevole.\
+	-Va disabilitato usando il flag di compilazione -fno-stack-protector.\
+\
+2. ASLR (Address Space Layout Randomization):\
+	-ASLR randomizza gli indirizzi di memoria (stack, heap, ecc.) ad ogni esecuzione, rendendo pi\'f9 difficile prevedere l'indirizzo esatto del buffer.\
+	-Si disabilita temporaneamente sul sistema operativo con:\
+	sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space"\
+\
+\
+3.Protezione NX (Non-Executable Memory):\
+	-NX impedisce l'esecuzione di codice in aree di memoria come lo stack o l'heap.\
+	-Si disabilita specificando il flag -z execstack al linker.\
+\
+4.Relocation (PIE: Position Independent Executable):\
+	-PIE crea binari i cui indirizzi possono essere completamente randomizzati.\
+	-Si disabilita con -no-pie.\
+\
+\
+
+\f2 \uc0\u55357 \u56507 
+\f1  Comando Completo per Compilare il Programma Vulnerabile\
+\
+gcc -m32 -fno-stack-protector -z execstack -no-pie -o vulnerabile vulnerabile.c\
+\
+-m32: Compila il programma per un'architettura a 32 bit (molto utile per semplici exploit, pi\'f9 prevedibile rispetto ai 64 bit).\
+-fno-stack-protector: Disabilita la protezione del canary.\
+-z execstack: Rende eseguibile lo stack.\
+-no-pie: Disabilita l'ASLR a livello di binario.\
+\
+\
+\
+\
+CODICE\
+\
+Codice Vulnerabile in C\
+	Ecco un programma C volutamente vulnerabile a un buffer overflow. L'errore principale si trova nell'uso di gets() che 	non controlla la lunghezza dell'input.\
+\
+#include <stdio.h>\
+#include <string.h>\
+\
+void vuln_function() \{\
+    char buffer[64]; // Buffer di dimensione fissa\
+    printf("Inserisci il tuo input: ");\
+    gets(buffer); // VULNERABILIT\'c0: gets() non controlla la lunghezza dell'input\
+    printf("Hai inserito: %s\\n", buffer);\
+\}\
+\
+int main() \{\
+    vuln_function();\
+    printf("Esecuzione terminata correttamente.\\n");\
+    return 0;\
+\}\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+}
